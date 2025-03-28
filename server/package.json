@@ -1,0 +1,37 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start:community": "nodemon ./microservices/community-service/community-microservice.js",
+    "start:auth": "nodemon ./microservices/auth-service/auth-microservice.js",
+    "start:gateway": "npm i && nodemon ./gateway.js",
+    "install-deps": "cd ./microservices/auth-service && npm i  && cd ../community-service && npm i",
+    "start:all": "npm-run-all --parallel start:gateway start:community start:auth"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "nodemon": "^3.1.9",
+    "@apollo/federation": "^0.38.1",
+    "@apollo/gateway": "^2.7.1",
+    "apollo-server-express": "^3.13.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.18.2",
+    "@apollo/server": "^4.11.3",
+    "@apollo/subgraph": "^2.10.0",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.3",
+    "cookie-parser": "^1.4.7",
+    "graphql": "^16.10.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.10.2"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5"
+  }
+}

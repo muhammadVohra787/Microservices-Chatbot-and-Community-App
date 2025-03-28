@@ -1,0 +1,125 @@
+/* General Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #ffffff;
+    margin: 0;
+    padding: 0;
+    margin-left: 20%;
+    margin-right: 20%;
+  }
+  
+  .container {
+    margin-top: 50px;
+    padding: 30;
+  }
+  
+  h2 {
+    text-align: center;
+    color: #333;
+    font-size: 28px;
+    margin-bottom: 30px;
+  }
+  
+  nav {
+    background-color: #007bff;
+    border-radius: 8px 8px 0 0;
+  }
+  
+  nav .nav-link {
+    color: white !important;
+    font-weight: 500;
+  }
+  
+  nav .nav-link.active {
+    background-color: #0056b3;
+    color: white !important;
+    font-weight: 600;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-control {
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    padding: 12px;
+    font-size: 14px;
+    width: 100%;
+    margin-top: 5px;
+  }
+  
+  .form-control:focus {
+    border-color: #03044e;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.25);
+  }
+  
+  button {
+    width: 106%;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    background-color: #0d2383;
+    border: none;
+    color: white;
+    border-radius: 5px;
+    margin-top: 20px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #457fbd;
+  }
+  
+  button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  
+  .alert {
+    margin-top: 20px;
+    font-weight: bold;
+    text-align: center;
+  }
+  
+  .spinner-border {
+    width: 25px;
+    height: 25px;
+    margin-right: 10px;
+  }
+  
+  .select-role {
+    border-radius: 5px;
+    padding: 10px;
+  }
+  
+  .select-role option {
+    padding: 10px;
+  }
+  
+  .form-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+  }
+
+  .form-control {
+    display: inline-block;
+    width: 100%; 
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  .nav-tabs .nav-link {
+    font-size: 16px;
+    color: #000000;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    text-decoration: none;
+  }
+  .nav-tabs:hover .nav-link:hover{
+    color: #8f78c4;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  
