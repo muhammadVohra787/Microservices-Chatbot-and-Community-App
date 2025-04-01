@@ -6,16 +6,16 @@ import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { Document } from "langchain/document";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import CommunityPost from '../models/CommunityPost.js';
-import Interaction from '../models/Interaction.js'; 
+import Interaction from '../models/Interaction.js';
 import { compareSync } from 'bcrypt';
 
 dotenv.config();
 
-const API_KEY = process.env.GEMINI_API_KEY 
+const API_KEY = process.env.GEMINI_API_KEY
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 export async function getSummary(prompt) {
-    if(API_KEY === null || API_KEY === undefined){
+    if (!API_KEY) {
         return "API Key not set up. Check server-side ENV"
     }
     try {
@@ -43,11 +43,16 @@ export async function getAIResponse(userQuery, prompt, pastConversation) {
             }
             const response = await ai.models.generateContent({
                 model: "gemini-2.0-flash",
-                contents: `User asked ${userQuery}\n this the data we have from database: 
-                ${prompt}\n Now keep in mind there might be some data that doesnt relate to the question so ignroe that\n. 
-                Answer their question.\n **Past Conversations**: These are simply for chat history, you can relevant information when needed
-                but it is simply here for context and user history ${pastConversation}`
+                contents: `User asked: ${userQuery}\n
+                This is the data we have from the database:\n
+                ${prompt}\n
+                Now keep in mind there might be some data that doesn't relate to the question, so ignore that.\n
+                Answer their question.\n
+                **Past Conversations**: These are simply for chat history, you can use relevant information when needed, but it is simply here for context and user history:\n
+                ${pastConversation}\n`
             });
+
+
             return response.text;
         }
     } catch (error) {
@@ -56,6 +61,32 @@ export async function getAIResponse(userQuery, prompt, pastConversation) {
     }
 }
 
+
+export async function getFollowUpQuestions(prompt,pastConversation) {
+    try {
+        if (prompt != null) {
+            if (prompt.length < 200) {
+                return "Too short for summary";
+            }
+            const response = await ai.models.generateContent({
+                model: "gemini-2.0-flash",
+                contents: `This is the conversation AI and human just had ${prompt}\n\n
+                Provide a list of 2-3 follow-up questions that could be relevant based on the conversation. These questions will be first person so
+                can just copy paste it like "Lets talk about bycyles" not like "would you want to discuss about cycles"?
+                \nReturn the questions seperated by "***" sign to make it clear. Give it so if I do .split("***") and I get an array.
+                Please do not give any else.  If theres not much data, simply return "Lets discuss the new posts".
+                \nFor context: this is the full converstaion. It might be related might not be:\n ${pastConversation}
+            `
+            });
+
+
+            return response.text;
+        }
+    } catch (error) {
+        console.error("Error fetching summary:", error);
+        return "Failed to generate summary.";
+    }
+}
 async function loadPostsFromDB() {
     try {
         const posts = await CommunityPost.find().populate('author').sort({ createdAt: -1 });
@@ -81,14 +112,14 @@ async function createVectorStore(posts) {
 }
 
 export async function aiAgentLogic(userQuery, userId) {
-    if(!API_KEY){
+    if (!API_KEY) {
         return {
             text: "API KEY not found/invalid. Check env file GEMINI_API_KEY=",
             suggestedQuestions: [],
             retrievedPosts: [],
         };
     }
-    
+
     const posts = await loadPostsFromDB();
     const vectorStore = await createVectorStore(posts);
     const retriever = vectorStore.asRetriever();
@@ -119,10 +150,13 @@ export async function aiAgentLogic(userQuery, userId) {
         Summary: ${doc.metadata.aiSummary || "No summary available"}
         Content: ${doc.pageContent}
         `).join("\n\n");
+
+    // Generate a response using the relevant posts
+    const responseText = await getAIResponse(userQuery, formattedPosts, pastConversation);
     
-        // Generate a response using the relevant posts
-    const responseText = await getAIResponse(userQuery,formattedPosts, pastConversation);
+    const followUpQuestionsString = await getFollowUpQuestions(responseText, pastConversation)
     
+    const followUpQuestions = followUpQuestionsString.split("***")
     // Store this interaction for future improvements
     const newInteraction = new Interaction({
         userQuery,
@@ -133,7 +167,7 @@ export async function aiAgentLogic(userQuery, userId) {
 
     return {
         text: responseText,
-        suggestedQuestions: ["What else can I help you with?", "Would you like to explore related discussions?"],
+        suggestedQuestions: followUpQuestions,
         retrievedPosts: relevantDocs,
     };
     // return {
