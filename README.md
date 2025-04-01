@@ -40,40 +40,55 @@ In this project, we've integrated **Langchain** to enhance the chatbot capabilit
 
 ### Backend Setup
 
-1. **Install dependencies for all services:**
+**1. Start MongoDB Locally:**
 
-   Navigate to the root directory of the backend project and run:
+* Ensure MongoDB is installed and running on your local machine. You might need to start the MongoDB server in a separate terminal window:
 
-   ```bash
-   npm run install-deps
-   ```
+    ```bash
+    mongod
+    ```
 
-   This will install dependencies for the API Gateway, Authentication Service, and Community Service.
+    * If you have a custom configuration, use that to start mongod.
 
-2. **Start the microservices:**
+**2.a Server Setup:**
 
-   To start all services concurrently (API Gateway, Authentication Service, and Community Service):
+* Navigate to the `server` directory in your project:
 
-   ```bash
-   npm run start:all
-   ```
+    ```bash
+    cd server
+    ```
 
-   Alternatively, you can start each service individually:
+* Install the server dependencies:
 
-   - To start the Authentication Service:
-     ```bash
-     npm run start:auth
-     ```
+    ```bash
+    npm run install-deps
+    ```
 
-   - To start the Community Service:
-     ```bash
-     npm run start:community
-     ```
+* Start all server microservices (API Gateway, Authentication Service, and Community Service) concurrently:
 
-   - To start the API Gateway:
-     ```bash
-     npm run start:gateway
-     ```
+    ```bash
+    npm run start:all
+    ```
+
+**2.b Client Setup:**
+
+* Open a new terminal window.
+* Navigate to the `client` directory in your project:
+
+    ```bash
+    cd client
+    ```
+
+* Install the client dependencies:
+
+    ```bash
+    npm run install-deps
+    ```
+* then to start the client:
+
+    ```bash
+    npm run deploy:all
+    ```
 
 3. **Ensure MongoDB is running locally:**
 
