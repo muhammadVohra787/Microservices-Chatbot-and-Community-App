@@ -108,21 +108,23 @@ const CommunityChatbot = ({ userId }) => {
     }
     return (
         <>
-            <Button
-                variant="contained"
-                color="primary"
-                sx={{
-                    position: "fixed",
-                    bottom: 20,
-                    right: 20,
-                    borderRadius: "50%",
-                    minWidth: "60px",
-                    minHeight: "60px",
-                }}
-                onClick={() => setOpen(true)}
-            >
-                <ChatBubbleOutlineIcon />
-            </Button>
+<Button
+    variant="contained"
+    color="primary"
+    sx={{
+        position: "fixed",
+        bottom: 20,
+        right: 20,
+        borderRadius: "50%",
+        width: "60px", // Fixed width
+        height: "60px", // Fixed height
+        padding: 0, // Remove any padding
+    }}
+    onClick={() => setOpen(true)}
+>
+    <ChatBubbleOutlineIcon sx={{ fontSize: 30 }} />  {/* Icon size adjustment */}
+</Button>
+
 
             <Modal
                 open={open}

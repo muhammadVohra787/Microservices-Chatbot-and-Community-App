@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { gql, useQuery, useMutation } from '@apollo/client';
-import { List, ListItem, ListItemText, Typography, Button, TextField, Box } from '@mui/material';
+import { List, ListItem, ListItemText, Typography, Button, TextField, Box, Divider } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
@@ -138,8 +138,10 @@ const ListCommunityPosts = ({ userId }) => {
                   }
                   secondary={
                     <>
-                      <Typography variant="body2" color="textSecondary">{post.category}</Typography>
+                      <Typography variant="body2" color="primary">Type: {post.category}</Typography>
                       <Typography variant="body1" sx={{ mt: 1 }}>{post.content}</Typography>
+                      
+                      <Typography variant="body2" color="primary" sx={{mt:0.2}}>AI Summary:</Typography>
                       <Typography variant="body1" sx={{ mt: 1 }}>{post.aiSummary || "No ai summary available!"}</Typography>
                     </>
                   }
