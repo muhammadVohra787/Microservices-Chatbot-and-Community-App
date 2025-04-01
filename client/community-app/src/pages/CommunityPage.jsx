@@ -6,7 +6,7 @@ import HelpRequestList from '../components/HelpRequestList.jsx';
 import ListCommunityPosts from '../components/ListCommunityPosts.jsx';
 import NewsFeed from '../components/NewsFeed.jsx';
 import { useQuery, useMutation, gql } from '@apollo/client';
-
+import CommunityChatbot from '../components/CommunityChatBot.jsx';
 const LOGOUT_MUTATION = gql`
   mutation Logout {
     logout
@@ -32,6 +32,7 @@ const CommunityPage = ({ role, userId }) => {
       { name: 'Create Help Request', component: <CreateHelpRequest userId={userId} /> },
       { name: 'Help Requests', component: <HelpRequestList userId={userId} role={role} /> },
       { name: 'Community Posts', component: <ListCommunityPosts userId={userId} /> },
+ 
     ],
     business_owner: [
       { name: 'Create Post', component: <CreateCommunityPost userId={userId} /> },
@@ -94,6 +95,7 @@ const CommunityPage = ({ role, userId }) => {
               <ListItemText primary="Logout" />
             </ListItem>
           </List>
+          
         </Drawer>
 
         {/* Main Content Area */}

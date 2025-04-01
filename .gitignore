@@ -1,0 +1,55 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Server specific
+.env
+.env.*.local
+.env.local
+config/local.json # If you have local config files
+
+# Client specific (e.g., React, Angular, Vue)
+build/
+dist/
+.cache/
+.DS_Store # macOS
+Thumbs.db # Windows
+
+# Logs
+logs/
+*.log
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# OS generated files
+[Tt]humbs.db
+*.DS_Store
+
+# Dependency directories (if applicable)
+jspm_packages/
+bower_components/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*.lock
+*.orig
+
+# Package managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Output of build tools
+out/
+.nuxt/
+.next/
+.parcel-cache/

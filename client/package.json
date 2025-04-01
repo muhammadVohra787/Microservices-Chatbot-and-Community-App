@@ -7,6 +7,7 @@
     "deploy:user-app": "cd user-app && npm i && npm run deploy",
     "deploy:community-app": "cd community-app && npm i && npm run deploy",
     "dev:shell-app": "cd shell-app && npm i &&  npm run dev",
+    "install-deps": "cd shell-app && npm i && cd ../user-app && npm i && cd ../community-app && npm i",
     "deploy:all": "npm-run-all --parallel dev:shell-app deploy:user-app deploy:community-app "
   },
   "dependencies": {

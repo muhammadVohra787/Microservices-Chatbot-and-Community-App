@@ -6,8 +6,8 @@
   "scripts": {
     "start:community": "nodemon ./microservices/community-service/community-microservice.js",
     "start:auth": "nodemon ./microservices/auth-service/auth-microservice.js",
-    "start:gateway": "npm i && nodemon ./gateway.js",
-    "install-deps": "cd ./microservices/auth-service && npm i  && cd ../community-service && npm i",
+    "start:gateway": "nodemon ./gateway.js",
+    "install-deps": "npm i && cd ./microservices/auth-service && npm i  && cd ../community-service && npm i",
     "start:all": "npm-run-all --parallel start:gateway start:community start:auth"
   },
   "type": "module",

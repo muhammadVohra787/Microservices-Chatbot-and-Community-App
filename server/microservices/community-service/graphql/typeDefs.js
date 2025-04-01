@@ -19,7 +19,6 @@ type CommunityPost {
   category: String!
   aiSummary: String
   createdAt: String!
-  updatedAt: String!
 }
 
 type HelpRequest {
@@ -30,13 +29,19 @@ type HelpRequest {
   isResolved: Boolean!
   volunteers: [User!]! @external
   createdAt: String!
-  updatedAt: String!
 }
+type AIResponse {
+    text: String!
+    suggestedQuestions: [String]!
+    retrievedPosts: [CommunityPost]!
+  }
 
 # Queries
 type Query {
   getCommunityPosts: [CommunityPost!]!
   getHelpRequests: [HelpRequest!]!
+  communityAIQuery(input: String!, userId: ID!): AIResponse!
+  getDiscussionById(postId: ID!) : CommunityPost
 }
 
 # Mutations
@@ -45,7 +50,6 @@ type Mutation {
     author: ID!,
     title: String!,
     content: String!,
-    aiSummary: String,
     category: String!
   ): CommunityPost!
 

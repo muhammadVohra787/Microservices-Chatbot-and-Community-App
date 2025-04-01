@@ -1,7 +1,8 @@
 import CommunityPost from '../models/CommunityPost.js';
 import HelpRequest from '../models/HelpRequest.js';
 import User from '../models/User.js'; // Direct DB access
-
+import { getSummary } from './geminiResolver.js';
+import { aiAgentLogic } from './geminiResolver.js';
 // Helper function to check if the user role is allowed
 const checkUserRole = async (userId, allowedRoles) => {
   try {
@@ -28,14 +29,40 @@ const resolvers = {
     getHelpRequests: async () => {
       return await HelpRequest.find().populate('author volunteers');
     },
-  },
 
-  Mutation: {
-    createCommunityPost: async (_, { author, title, content, category, aiSummary }) => {
+    getDiscussionById : async(_, {postId})=>{
+      return await CommunityPost.findById(postId).populate('author')
+    },
+    async communityAIQuery(_, { input, userId }) {
+      try {
+        const response = await aiAgentLogic(input,userId);
+        return {
+          text: response.text,
+          suggestedQuestions: response.suggestedQuestions,
+          retrievedPosts: response.retrievedPosts.map(post => ({
+            id: post.metadata.postId,
+            author: post.metadata.author,
+            title: post.metadata.title,
+            content: post.pageContent,
+            category: post.metadata.category,
+            aiSummary: post.metadata.aiSummary,
+            createdAt: post.metadata.createdAt,
+          })),
+        };
+      } catch (error) {
+        console.error("Error in AI Query:", error);
+        throw new Error("Failed to process AI query.");
+      }
+    },
+  },
+ 
+  Mutation: { 
+    createCommunityPost: async (_, { author, title, content, category }) => {
       const hasPermission = await checkUserRole(author, ['resident', 'community_organizer']);
       if (!hasPermission) throw new Error('Insufficient permissions');
-
-      const newPost = new CommunityPost({ author, title, content, category, aiSummary });
+      console.log(content.length)
+      let aiSummary = await getSummary(content);
+      const newPost = new CommunityPost({ author, title, content, category, aiSummary});
       return await newPost.save();
     },
 

@@ -3,8 +3,8 @@ import { gql, useMutation } from '@apollo/client'; // Assuming you're using Apol
 import { TextField, Button, Grid, Paper, Typography, Alert } from '@mui/material';
 
 const CREATE_COMMUNITY_POST = gql`
-  mutation CreateCommunityPost($author: ID!, $title: String!, $content: String!, $category: String!, $aiSummary: String) {
-    createCommunityPost(author: $author, title: $title, content: $content, category: $category, aiSummary: $aiSummary) {
+  mutation CreateCommunityPost($author: ID!, $title: String!, $content: String!, $category: String!) {
+    createCommunityPost(author: $author, title: $title, content: $content, category: $category) {
       id
       title
       content
@@ -38,7 +38,7 @@ const CreateCommunityPost = ({ userId }) => {
   const [createCommunityPost] = useMutation(CREATE_COMMUNITY_POST, {
     refetchQueries: [{ query: GET_COMMUNITY_POSTS }], // Automatically refreshes the list
   });
-  const [aiSummary, setAiSummary] = useState('');
+
   // Set the timeout function to clear alert after 5 seconds
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -50,16 +50,17 @@ const CreateCommunityPost = ({ userId }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const author = userId; // Replace with actual user ID
-
+    if(!userId || !title || !content || !category){
+      return
+    }
     try {
-      console.log({author: author, title: title, content:content, category: category, aiSummary: aiSummary})
-      const { data } = await createCommunityPost({ variables: { author: author, title: title, content:content, category: category, aiSummary: aiSummary } });
+      console.log({author: userId, title: title, content:content, category: category})
+      const { data } = await createCommunityPost({ variables: { author: userId, title: title, content:content, category: category} });
       console.log('Post created:', data.createCommunityPost);
       setTitle('')
       setContent('')
       setCategory('')
-      setAiSummary('')
+
       setCurrentAlert({ message: "Post created", type: "success" });
     } catch (error) {
       console.error('Error creating post:', error);
@@ -96,18 +97,7 @@ const CreateCommunityPost = ({ userId }) => {
               required
             />
           </Grid>
-          <Grid item xs={12}>
-            <TextField
-              label="Ai Summary"
-              variant="outlined"
-              fullWidth
-              multiline
-              rows={4}
-              value={aiSummary}
-              onChange={(e) => setAiSummary(e.target.value)}
-              required
-            />
-          </Grid>
+
           <Grid item xs={12}>
             <TextField
               label="Category"
@@ -119,6 +109,7 @@ const CreateCommunityPost = ({ userId }) => {
               }}
               value={category}
               onChange={(e) => setCategory(e.target.value)}
+              required
             >
               <option value="news">News</option>
               <option value="discussion">Discussion</option>
