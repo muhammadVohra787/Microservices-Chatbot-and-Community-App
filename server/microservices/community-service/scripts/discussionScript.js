@@ -89,10 +89,10 @@ const createUser = async () => {
 
             // Create a new post with the user ID
             const newPost = new CommunityPost({
-                author: user.id, // Using user.id (not _id) as you specified
+                author: user.id,
                 title,
                 content,
-                category: catTypes[random], // All posts are of type 'discussion'
+                category: catTypes[random], 
                 aiSummary
             });
 
