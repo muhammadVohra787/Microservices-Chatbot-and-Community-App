@@ -187,6 +187,7 @@ const HelpRequestList = ({ userId, role }) => {
     <Paper sx={{ padding: 2 }}>
       <Typography variant="h6" gutterBottom>Help Requests</Typography>
       <List>
+        {requests && <Typography variant="body2" gutterBottom>No Requests Avaialble</Typography>}
         {requests.map((request) => (
           <ListItem key={request.id}>
             <ListItemAvatar>

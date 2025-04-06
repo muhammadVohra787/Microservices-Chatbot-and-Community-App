@@ -53,3 +53,6 @@ out/
 .nuxt/
 .next/
 .parcel-cache/
+
+*/.env
+*/*/.env

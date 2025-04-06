@@ -1,16 +1,23 @@
 import CommunityPost from '../models/CommunityPost.js';
 import HelpRequest from '../models/HelpRequest.js';
 import User from '../models/User.js'; // Direct DB access
+import BusinessProfile from '../models/BussinessProfiles.js';
+import Product from '../models/Product.js';
+import Review from '../models/Review.js';
 import { getSummary } from './geminiResolver.js';
 import { aiAgentLogic } from './geminiResolver.js';
+import fs from 'fs'
+import path from 'path';
+import BussinessProfiles from '../models/BussinessProfiles.js';
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 // Helper function to check if the user role is allowed
 const checkUserRole = async (userId, allowedRoles) => {
   try {
-    // Fetch user from the database
+
     const user = await User.findById(userId);
-    console.log(user.role)
+    console.log(userId)
     if (!user) {
-      throw new Error('User not found');
+      return false
     }
 
     // Check if the user's role is included in allowedRoles
@@ -30,12 +37,61 @@ const resolvers = {
       return await HelpRequest.find().populate('author volunteers');
     },
 
-    getDiscussionById : async(_, {postId})=>{
+    getBusinsessByUserId: async (_, { userId }) => {
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new Error("User not found");
+      }
+      const businesses = await BusinessProfile.find({ author: userId })
+        .populate('products') // Populate the products directly
+        .populate({
+          path: 'reviews',  // Populate reviews and user inside each review
+          populate: {
+            path: 'user',    // Populate the user in the review
+            model: 'User',   // Ensure we populate the correct model (User)
+            select: 'username email' // Select the fields you want from the User model
+          }
+        });
+
+      console.log('Businesses with populated reviews and products:', businesses);
+
+      console.log(businesses[0].reviews[0].user)
+      return businesses;
+    },
+    getBusinessById: async (_, { id }) => {
+      const businesses = await BusinessProfile.findById(id)
+      .populate('products') // Populate the products directly
+      .populate({
+        path: 'reviews',  // Populate reviews and user inside each review
+        populate: {
+          path: 'user',    // Populate the user in the review
+          model: 'User',   // Ensure we populate the correct model (User)
+          select: 'username email' // Select the fields you want from the User model
+        }
+      });
+      return businesses
+    },
+
+    getAllBusinesses: async () => {
+
+      const businesses = await BusinessProfile.find()
+      .populate('products') // Populate the products directly
+      .populate({
+        path: 'reviews',  // Populate reviews and user inside each review
+        populate: {
+          path: 'user',    // Populate the user in the review
+          model: 'User',   // Ensure we populate the correct model (User)
+          select: 'username email' // Select the fields you want from the User model
+        }
+      });
+      return await BusinessProfile.find().populate('products reviews')
+    },
+    getDiscussionById: async (_, { postId }) => {
       return await CommunityPost.findById(postId).populate('author')
     },
     async communityAIQuery(_, { input, userId }) {
       try {
-        const response = await aiAgentLogic(input,userId);
+        const response = await aiAgentLogic(input, userId);
         return {
           text: response.text,
           suggestedQuestions: response.suggestedQuestions,
@@ -55,14 +111,14 @@ const resolvers = {
       }
     },
   },
- 
-  Mutation: { 
+
+  Mutation: {
     createCommunityPost: async (_, { author, title, content, category }) => {
       const hasPermission = await checkUserRole(author, ['resident', 'community_organizer']);
       if (!hasPermission) throw new Error('Insufficient permissions');
       console.log(content.length)
       let aiSummary = await getSummary(content);
-      const newPost = new CommunityPost({ author, title, content, category, aiSummary});
+      const newPost = new CommunityPost({ author, title, content, category, aiSummary });
       return await newPost.save();
     },
 
@@ -98,13 +154,13 @@ const resolvers = {
       // Find the help request by its ID
       const helpRequest = await HelpRequest.findById(id);
       if (!helpRequest) throw new Error('Help request not found!');
-    
+
       // Find the volunteer by their ID and check if their role is 'community_organizer'
       const volunteer = await User.findById(volunteerId); // Assuming 'User' is the collection storing volunteer info
       if (!volunteer) throw new Error('Volunteer not found!');
-          
+
       console.log("Role and Id ", volunteer.role, "id", volunteerId); // Log the volunteer's role for debugging
-      
+
       const hasPermission = volunteer.role === 'community_organizer';
       if (!hasPermission) throw new Error('Insufficient permissions');
 
@@ -114,11 +170,11 @@ const resolvers = {
         { $push: { volunteers: volunteerId } },  // Add the volunteer's ID to the request
         { new: true }
       ).populate('volunteers'); // Populate the 'volunteers' field with user info
-      
+
       console.log("Volunteer added")
       return true;  // Return success
     },
-    
+
 
     // New Mutation: Update Community Post
     updateCommunityPost: async (_, { id, title, content, category, aiSummary }) => {
@@ -153,29 +209,29 @@ const resolvers = {
       console.log({ id, description, location, isResolved });
       const helpRequest = await HelpRequest.findById(id);
       if (!helpRequest) throw new Error('Help request not found!');
-    
+
       const hasPermission = await checkUserRole(helpRequest.author, ['resident', 'business_owner', 'community_organizer']);
       if (!hasPermission) throw new Error('Insufficient permissions');
-    
+
       // Log before updating
       console.log('isResolved before assignment:', helpRequest.isResolved);
-      
+
       helpRequest.description = description || helpRequest.description;
       helpRequest.location = location || helpRequest.location;
-      
+
       // Assign isResolved only if it's explicitly passed as false or true
       helpRequest.isResolved = (isResolved !== undefined) ? isResolved : helpRequest.isResolved;
-    
+
       // Log after updating
       console.log('isResolved after assignment:', helpRequest.isResolved);
-    
+
       // Save the updated help request and populate the author field
       const updatedHelpRequest = await helpRequest.save();
-      
+
       // Populate the 'author' field
       await updatedHelpRequest.populate('author');
       console.log(updatedHelpRequest.isResolved);  // Log to check updated value
-      
+
       // Return the updated help request with populated author
       return updatedHelpRequest;
     }
@@ -196,8 +252,112 @@ const resolvers = {
     logout: (_, __, { res }) => {
       res.clearCookie("token", { httpOnly: true, secure: true, sameSite: "Strict" });
       return true;
-  },
-  },
+    },
+    replyReview: async (_, { id, reply }) => {
+      // Find the review by its ID and update the `ownerReply` field
+      let review = await Review.findByIdAndUpdate(
+        id,
+        { $set: { ownerReply: reply } },  // Set the ownerReply field to the new reply
+        { new: true }  // Return the updated review after the update
+      );
+    
+      if (!review) {
+        throw new Error('Review not found');
+      }
+    
+      return true;
+    },
+    createReview: async (_, { businessId, userId, rating, comment }, { user }) => {
+      try {
+        // Create a new review
+        const review = new Review({
+          business: businessId,
+          user: userId,
+          rating,
+          comment
+        });
+
+        // Save the review to the database
+        await review.save();
+
+        // Optionally, add review to the BusinessProfile in the database
+        await BusinessProfile.findByIdAndUpdate(businessId, {
+          $push: { reviews: review._id }
+        });
+
+        return true; // Return the created review
+      } catch (error) {
+        console.error("Error creating review:", error);
+        throw new Error("Error creating review");
+      }
+    },
+
+    createProduct: async (_, { businessId, name, price, description, image, specialOffer }) => {
+      try {
+        // Create a new product
+        const product = new Product({
+          business: businessId,
+          name,
+          price,
+          description,
+          image,
+          specialOffer
+        });
+
+        // Save the product to the database
+        await product.save();
+
+        // Optionally, add product to the BusinessProfile in the database
+        await BusinessProfile.findByIdAndUpdate(businessId, {
+          $push: { products: product._id }
+        });
+
+        return true; // Return the created product
+      } catch (error) {
+        console.error("Error creating product:", error);
+        throw new Error("Error creating product");
+      }
+    },
+    createBusinessProfile: async (_, { userId, name, description, address, image }) => {
+      try {
+        // Check user role permissions
+        const hasPermission = await checkUserRole(userId, ['business_owner']);
+        if (!hasPermission) throw new Error('Insufficient permissions');
+
+        let imagePath = null
+
+        if (image?.length > 5) {
+          // Decode base64 image to binary data
+          const base64Data = image.replace(/^data:image\/\w+;base64,/, ''); // Remove base64 prefix
+          const buffer = Buffer.from(base64Data, 'base64'); // Convert to binary data
+
+          const folder_path = path.join(process.cwd(), './uploads')
+          await fs.promises.mkdir(folder_path, { recursive: true });
+          // Define the file path to save the image (e.g., 'uploads/images/')
+          imagePath = path.join(folder_path, `${Date.now()}.jpg`);
+
+          // Save the image file to the disk
+          await fs.promises.writeFile(imagePath, buffer);
+        }
+        // Save the business profile with the image path
+        const businessProfile = new BusinessProfile({
+          author: userId,
+          name,
+          description,
+          address,
+          image: imagePath, // Store the file path of the saved image
+        });
+
+        // Save the profile to the database
+        await businessProfile.save();
+
+        return true;  // Return success
+      } catch (error) {
+        console.error('Error creating business profile:', error);
+        throw new Error('Error creating business profile');
+      }
+    },
+  }
 };
 
 export default resolvers;

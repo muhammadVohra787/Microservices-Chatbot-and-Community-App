@@ -4,6 +4,7 @@ import CommunityPage from "./pages/CommunityPage";
 import SingleDiscussion from "./pages/SingleDiscussion";
 
 import CommunityChatbot from "./components/CommunityChatBot";
+import BusinessPage from "./pages/BusinessPage";
 // Set up Apollo Client
 const client = new ApolloClient({
   uri: "http://localhost:4002/graphql",
@@ -12,8 +13,8 @@ const client = new ApolloClient({
 });
 
 function App({ role, userId }) {
-  const rolePassed = role || "community_organizer";
-  const userIdPassed = userId || "67d74fe58753092f5dcfbbe5";
+  const rolePassed = role
+  const userIdPassed = userId
 
   console.log("Community app", { userId, role }, { userIdType: typeof userId, roleType: typeof role });
 
@@ -29,6 +30,7 @@ function App({ role, userId }) {
             element={<CommunityPage role={rolePassed} userId={userIdPassed} />}
           />
           <Route path="/discussion/:id" element={<SingleDiscussion/>}/>
+          <Route path="/business/:id" element= {<BusinessPage/>}/>
           {/* 404 Page Not Found */}
           <Route path="*" element={<h2>Page Not Found</h2>} />
         </Routes>

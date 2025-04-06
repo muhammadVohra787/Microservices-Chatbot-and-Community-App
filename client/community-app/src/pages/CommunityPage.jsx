@@ -6,7 +6,9 @@ import HelpRequestList from '../components/HelpRequestList.jsx';
 import ListCommunityPosts from '../components/ListCommunityPosts.jsx';
 import NewsFeed from '../components/NewsFeed.jsx';
 import { useQuery, useMutation, gql } from '@apollo/client';
-import CommunityChatbot from '../components/CommunityChatBot.jsx';
+import CreateBusinessProfile from '../components/CreateBusinessProfile.jsx';
+import BusinessDashboard from '../components/BusinessDashboard.jsx';
+import BusinessView from '../components/BusinessView.jsx';
 const LOGOUT_MUTATION = gql`
   mutation Logout {
     logout
@@ -28,6 +30,7 @@ const CommunityPage = ({ role, userId }) => {
   // Define available sections based on roles
   const sectionsByRole = {
     resident: [
+      { name: 'Businesses', component: <BusinessView userId={userId}/> },
       { name: 'Create Post', component: <CreateCommunityPost userId={userId} /> },
       { name: 'Create Help Request', component: <CreateHelpRequest userId={userId} /> },
       { name: 'Help Requests', component: <HelpRequestList userId={userId} role={role} /> },
@@ -35,12 +38,17 @@ const CommunityPage = ({ role, userId }) => {
  
     ],
     business_owner: [
+      { name: 'Businesses', component: <BusinessView userId={userId}/> },
+      {name :'Create Business', component: <CreateBusinessProfile userId={userId}/>}, // this page is not for BUSINESS OWNERS but here for testing
+      {name :'Dashboard', component: <BusinessDashboard userId={userId}/>},
       { name: 'Create Post', component: <CreateCommunityPost userId={userId} /> },
       { name: 'News Feed', component: <NewsFeed userId={userId} /> },
       { name: 'Help Requests', component: <HelpRequestList userId={userId} role={role} /> },
-      { name: 'Community Posts', component: <ListCommunityPosts userId={userId} /> },
+      { name: 'Community Posts', component: <ListCommunityPosts userId={userId} /> }
+      
     ],
     community_organizer: [
+      { name: 'Businesses', component: <BusinessView userId={userId}/> },
       { name: 'Create Post', component: <CreateCommunityPost userId={userId} /> },
       { name: 'Create Help Request', component: <CreateHelpRequest userId={userId} /> },
       { name: 'Help Requests', component: <HelpRequestList userId={userId} role={role} /> },
