@@ -132,17 +132,21 @@ const ListCommunityPosts = ({ userId }) => {
               <Box sx={{ width: '100%' }}>
                 <ListItemText
                   primary={
-                    <Typography variant="h6">
+                    <Typography variant="h6" component="div">
                       {post?.author?.username} - {post.title}
                     </Typography>
                   }
                   secondary={
                     <>
-                      <Typography variant="body2" color="primary">Type: {post.category}</Typography>
-                      <Typography variant="body1" sx={{ mt: 1 }}>{post.content}</Typography>
+                      <Typography variant="body2" component="span" color="primary">Type: {post.category}</Typography>
+                      <br />
+                      <Typography variant="body1" component="span" sx={{ mt: 1 }}>{post.content}</Typography>
+                      <br />
                       
-                      <Typography variant="body2" color="primary" sx={{mt:0.2}}>AI Summary:</Typography>
-                      <Typography variant="body1" sx={{ mt: 1 }}>{post.aiSummary || "No ai summary available!"}</Typography>
+                      <Typography variant="body2" component="span" color="primary" sx={{mt:0.2}}>AI Summary:</Typography>
+                      <br />
+                      <Typography variant="body1" component="span" sx={{ mt: 1 }}>{post.aiSummary || "No ai summary available!"}</Typography>
+                      <br />
                     </>
                   }
                 />

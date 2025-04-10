@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { CircularProgress, Container, List, ListItem, ListItemText, Box, Drawer, Toolbar, Typography, Button } from '@mui/material';
+// import { CircularProgress, Container, List, ListItem, ListItemText, Box, Drawer, Toolbar, Typography, Button } from '@mui/material';
+import { CircularProgress, Container, List, ListItemButton, ListItemText, Box, Drawer, Toolbar, Typography, Button } from '@mui/material';
 import CreateCommunityPost from '../components/CreateCommunityPost.jsx';
 import CreateHelpRequest from '../components/CreateHelpRequest.jsx';
 import HelpRequestList from '../components/HelpRequestList.jsx';
@@ -83,8 +84,7 @@ const CommunityPage = ({ role, userId }) => {
           </Toolbar>
           <List>
             {sections.map((section, index) => (
-              <ListItem
-                button
+              <ListItemButton
                 key={index}
                 onClick={() => {
                   setSelectedIndex(index); // Set the selected tab index
@@ -97,11 +97,11 @@ const CommunityPage = ({ role, userId }) => {
                 }}
               >
                 <ListItemText primary={section.name} />
-              </ListItem>
+              </ListItemButton>
             ))}
-            <ListItem button key="logout" onClick={handleLogout}>
+            <ListItemButton key="logout" onClick={handleLogout}>
               <ListItemText primary="Logout" />
-            </ListItem>
+            </ListItemButton>
           </List>
           
         </Drawer>
