@@ -92,14 +92,16 @@ const CommunityChatbot = ({ userId }) => {
         }
     };
 
+    //add a check before reading properties on chatRef.current. No functional change, just preventing the error. It will only try to scroll if the element is available, preventing runtime errors.
     useEffect(() => {
-
         setTimeout(() => {
+          if (chatRef.current) {
             chatRef.current.scrollTop = chatRef.current.scrollHeight;
-            console.log(chatRef.current.scrollHeight)
-        }, 50); // 50ms delay to ensure render is complete
-
-    }, [open, messages]);
+            console.log(chatRef.current.scrollHeight);
+          }
+        }, 50); // Adjust delay if needed
+      }, [open, messages]);
+      
 
 
     const handleClick = (postId) => {
