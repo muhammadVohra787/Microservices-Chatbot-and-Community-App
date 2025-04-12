@@ -121,7 +121,7 @@ const BusinessPage = () => {
       <Grid container spacing={3} mt={1}>
         {business.products.length ? business.products.map((product) => (
           <Grid item xs={12} sm={6} md={4} key={product.id}>
-            <Paper  sx={{ p: 2 }}>
+            <Paper sx={{ p: 2 }}>
               <img
                 src={`http://localhost:4000/uploads/${product.image?.split("\\").pop()}`}
                 alt={product.name}
