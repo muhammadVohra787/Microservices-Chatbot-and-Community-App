@@ -1,10 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { gql, useQuery, useMutation } from '@apollo/client';
-import { List, ListItem, ListItemText, Typography, Button, TextField, Box, Divider } from '@mui/material';
+import {
+  List,
+  Typography,
+  Button,
+  TextField,
+  Box,
+  IconButton,
+  Paper,
+  MenuItem
+} from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-// GraphQL query to get all community posts
 const GET_COMMUNITY_POSTS = gql`
   query GetCommunityPosts {
     getCommunityPosts {
@@ -21,7 +29,6 @@ const GET_COMMUNITY_POSTS = gql`
   }
 `;
 
-// GraphQL mutation to update a community post
 const UPDATE_COMMUNITY_POST = gql`
   mutation UpdateCommunityPost($id: ID!, $title: String, $content: String, $category: String, $aiSummary: String) {
     updateCommunityPost(id: $id, title: $title, content: $content, category: $category, aiSummary: $aiSummary) {
@@ -38,7 +45,6 @@ const UPDATE_COMMUNITY_POST = gql`
   }
 `;
 
-// GraphQL mutation to delete a community post
 const DELETE_COMMUNITY_POST = gql`
   mutation DeleteCommunityPost($id: ID!) {
     deleteCommunityPost(id: $id)
@@ -47,20 +53,19 @@ const DELETE_COMMUNITY_POST = gql`
 
 const ListCommunityPosts = ({ userId }) => {
   const { data, loading, error, refetch } = useQuery(GET_COMMUNITY_POSTS);
-  
+  refetch()
   const [updateCommunityPost] = useMutation(UPDATE_COMMUNITY_POST);
   const [deleteCommunityPost] = useMutation(DELETE_COMMUNITY_POST);
 
   const [editMode, setEditMode] = useState(null);
-  const [editData, setEditData] = useState({ title: '', content: '', category: '' });
+  const [editData, setEditData] = useState({ title: '', content: '', category: '', aiSummary: '' });
 
   if (loading) return <Typography>Loading posts...</Typography>;
   if (error) return <Typography color="error">Error fetching posts: {error.message}</Typography>;
 
   const handleEdit = (post) => {
     setEditMode(post.id);
-    console.log(post)
-    setEditData({ title: post.title, content: post.content, category: post.category, aiSummary: post?.aiSummary});
+    setEditData({ title: post.title, content: post.content, category: post.category, aiSummary: post.aiSummary });
   };
 
   const handleSave = async (postId) => {
@@ -75,53 +80,47 @@ const ListCommunityPosts = ({ userId }) => {
   };
 
   return (
-    <Box sx={{ maxWidth: '800px', margin: 'auto', padding: 2 }}>
-      <Typography variant="h6" sx={{ mb: 3 }}>All Community Posts</Typography>
+    <Box sx={{ }}>
       <List>
         {data.getCommunityPosts.map((post) => (
-          <ListItem key={post.id} sx={{ mb: 2, p: 2, borderBottom: '1px solid #ddd', alignItems: 'flex-start' }}>
+          <Paper key={post.id}  sx={{ p: 2, mb: 3, borderRadius: 3 }}>
             {editMode === post.id ? (
-              <Box sx={{ width: '100%' }}>
+              <Box>
                 <TextField
                   label="Title"
+                  fullWidth
                   value={editData.title}
                   onChange={(e) => setEditData({ ...editData, title: e.target.value })}
-                  fullWidth
-                  sx={{ mb: 1 }}
+                  sx={{ mb: 2 }}
                 />
                 <TextField
                   label="Category"
-                  variant="outlined"
-                  fullWidth
                   select
-                  SelectProps={{
-                    native: true,
-                  }}
+                  fullWidth
                   value={editData.category}
                   onChange={(e) => setEditData({ ...editData, category: e.target.value })}
-                  sx={{ mb: 1 }}
+                  sx={{ mb: 2 }}
                 >
-                  <option value="news">News</option>
-                  <option value="discussion">Discussion</option>
+                  <MenuItem value="news">News</MenuItem>
+                  <MenuItem value="discussion">Discussion</MenuItem>
                 </TextField>
                 <TextField
                   label="Content"
+                  fullWidth
+                  multiline
+                  rows={4}
                   value={editData.content}
                   onChange={(e) => setEditData({ ...editData, content: e.target.value })}
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="AI Summary"
+                  fullWidth
                   multiline
                   rows={3}
-                  fullWidth
-                  sx={{ mb: 1 }}
-                />
-
-                <TextField
-                  label="Ai Summary"
                   value={editData.aiSummary}
                   onChange={(e) => setEditData({ ...editData, aiSummary: e.target.value })}
-                  multiline
-                  rows={3}
-                  fullWidth
-                  sx={{ mb: 1 }}
+                  sx={{ mb: 2 }}
                 />
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <Button onClick={() => handleSave(post.id)} variant="contained" color="primary">Save</Button>
@@ -129,36 +128,31 @@ const ListCommunityPosts = ({ userId }) => {
                 </Box>
               </Box>
             ) : (
-              <Box sx={{ width: '100%' }}>
-                <ListItemText
-                  primary={
-                    <Typography variant="h6" component="div">
-                      {post?.author?.username} - {post.title}
-                    </Typography>
-                  }
-                  secondary={
-                    <>
-                      <Typography variant="body2" component="span" color="primary">Type: {post.category}</Typography>
-                      <br />
-                      <Typography variant="body1" component="span" sx={{ mt: 1 }}>{post.content}</Typography>
-                      <br />
-                      
-                      <Typography variant="body2" component="span" color="primary" sx={{mt:0.2}}>AI Summary:</Typography>
-                      <br />
-                      <Typography variant="body1" component="span" sx={{ mt: 1 }}>{post.aiSummary || "No ai summary available!"}</Typography>
-                      <br />
-                    </>
-                  }
-                />
+              <Box>
+                <Typography variant="h6">{post.author?.username} — {post.title}</Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Type: {post.category}
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 2 }}>{post.content}</Typography>
+                <Box sx={{ backgroundColor: '#f4f6f8', p: 2, borderRadius: 1 }}>
+                  <Typography variant="body2" color="primary" gutterBottom>AI Summary</Typography>
+                  <Typography variant="body2">
+                    {post.aiSummary || "No AI summary available!"}
+                  </Typography>
+                </Box>
                 {userId === post.author.id && (
-                  <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                    <EditIcon onClick={() => handleEdit(post)}/>
-                    <DeleteIcon onClick={() => handleDelete(post.id)} />
+                  <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                    <IconButton color="primary" onClick={() => handleEdit(post)}>
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton color="error" onClick={() => handleDelete(post.id)}>
+                      <DeleteIcon />
+                    </IconButton>
                   </Box>
                 )}
               </Box>
             )}
-          </ListItem>
+          </Paper>
         ))}
       </List>
     </Box>

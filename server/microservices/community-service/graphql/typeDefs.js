@@ -44,6 +44,7 @@ type Review {
   comment: String
   createdAt: String!
   ownerReply: String
+  sentiment: String
 }
 
 type Product {

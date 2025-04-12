@@ -55,7 +55,7 @@ const SingleDiscussion = () => {
     }
     return (
         <Container maxWidth="md" sx={{ mt: 5 }}>
-            <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
+            <Paper sx={{ p: 3, borderRadius: 2 }}>
             <IconButton onClick={handleBack} sx={{mb:3}}>
                 <ArrowBackIcon/>
             </IconButton>

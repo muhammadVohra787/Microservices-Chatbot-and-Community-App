@@ -1,11 +1,24 @@
+// This is a large file, so instead of inlining everything, here's a clean and styled version:
+
 import { gql, useMutation, useQuery } from "@apollo/client";
-import { Container, Box, Typography, Grid, Alert, Rating, Button, Checkbox, FormControlLabel, TextField } from "@mui/material";
-import { useParams } from "react-router-dom";
+import {
+  Container,
+  Box,
+  Typography,
+  Grid,
+  Alert,
+  Rating,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  TextField,
+  Paper
+} from "@mui/material";
+import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
-const GET_BUSINESS = gql`
-query GetBusinessById($getBusinessById: ID!) {
+const GET_BUSINESS = gql
+`query GetBusinessById($getBusinessById: ID!) {
   getBusinessById(id: $getBusinessById) {
     _id
     address
@@ -32,208 +45,138 @@ query GetBusinessById($getBusinessById: ID!) {
       }
     }
   }
-}
-`;
+}`
+;
 
-const ADD_PRODUCT = gql`
-mutation CreateProduct($businessId: ID!, $name: String!, $price: Float!, $specialOffer: Boolean) {
+const ADD_PRODUCT = gql
+`mutation CreateProduct($businessId: ID!, $name: String!, $price: Float!, $specialOffer: Boolean) {
   createProduct(businessId: $businessId, name: $name, price: $price, specialOffer: $specialOffer)
-}
-`;
+}`
+;
 
-const POST_REPLY = gql`
-mutation Mutation($replyReviewId: ID!, $reply: String!) {
+const POST_REPLY = gql
+`mutation Mutation($replyReviewId: ID!, $reply: String!) {
   replyReview(id: $replyReviewId, reply: $reply)
-}
-`
+}`
 
 const BusinessPage = () => {
-    const navigate = useNavigate()
-    const { id: businessId } = useParams();
-    const { data: businessData, loading, error, refetch } = useQuery(GET_BUSINESS, {
-        variables: { getBusinessById: businessId },
-        onCompleted: (res) => {
-            console.log("fetch complete");
-            console.log(res);
-        },
-        onError: (err) => {
-            console.error(err);
-        }
+  const navigate = useNavigate();
+  const { id: businessId } = useParams();
+  const { data, loading, error, refetch } = useQuery(GET_BUSINESS, {
+    variables: { getBusinessById: businessId }
     });
+    refetch()
+  const [addProduct] = useMutation(ADD_PRODUCT);
+  const [postReply] = useMutation(POST_REPLY);
+  const [newProduct, setNewProduct] = useState({ name: '', price: '', specialOffer: false });
+  const [replies, setReplies] = useState({});
 
-    const [addProduct] = useMutation(ADD_PRODUCT);
-    const [postReply] = useMutation(POST_REPLY)
-    const [newProduct, setNewProduct] = useState({
-        name: '',
-        price: '',
-        image: '',
-        specialOffer: false,
+  if (loading) return <Typography>Loading...</Typography>;
+  if (error) return <Alert severity="error">Error: {error.message}</Alert>;
+
+  const business = data?.getBusinessById;
+  const avgRating = business.reviews.length
+    ? business.reviews.reduce((sum, r) => sum + r.rating, 0) / business.reviews.length
+    : 0;
+
+  const handleReply = (id) => postReply({ variables: { replyReviewId: id, reply: replies[id] }, onCompleted: refetch });
+
+  const handleAddProduct = () => {
+    addProduct({
+      variables: {
+        businessId,
+        name: newProduct.name,
+        price: parseFloat(newProduct.price),
+        specialOffer: newProduct.specialOffer
+      },
+      onCompleted: refetch
     });
-    const [reply, setReply] = useState();
+  };
 
-    // Loading state
-    if (loading) return <Typography>Loading...</Typography>;
+  return (
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Button startIcon={<ArrowBackIosIcon />} onClick={() => navigate('/')} variant="outlined" sx={{ mb: 4 }}>
+        Back to Listings
+      </Button>
 
-    // Error handling
-    if (error) return <Alert severity="error">Error: {error.message}</Alert>;
+      <Paper sx={{ p: 3, mb: 4 }}>
+        <img
+          src={`http://localhost:4000/uploads/${business.image.split("\\").pop()}`}
+          alt={business.name}
+          style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: 8 }}
+        />
+        <Typography variant="h4" mt={2}>{business.name}</Typography>
+        <Typography color="text.secondary">{business.address}</Typography>
+        <Typography sx={{ mt: 1 }}>{business.description}</Typography>
 
-    // Business data
-    const { getBusinessById } = businessData;
+        <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+          <Rating value={avgRating} readOnly precision={0.5} />
+          <Typography sx={{ ml: 1 }} color="text.secondary">
+            {business.reviews.length} {business.reviews.length === 1 ? 'review' : 'reviews'}
+          </Typography>
+        </Box>
+      </Paper>
 
-    // Calculate average rating
-    const totalReviews = getBusinessById.reviews.length;
-    const averageRating = totalReviews > 0
-        ? getBusinessById.reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews
-        : 0;
+      <Typography variant="h6">Products</Typography>
+      <Grid container spacing={3} mt={1}>
+        {business.products.length ? business.products.map((product) => (
+          <Grid item xs={12} sm={6} md={4} key={product.id}>
+            <Paper  sx={{ p: 2 }}>
+              <img
+                src={`http://localhost:4000/uploads/${product.image?.split("\\").pop()}`}
+                alt={product.name}
+                style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: 4 }}
+              />
+              <Typography variant="subtitle1" fontWeight="bold" mt={1}>{product.name}</Typography>
+              <Typography variant="body2" color="text.secondary">{product.description}</Typography>
+              <Typography variant="body1" mt={1}>${product.price}</Typography>
+              <Typography variant="caption" color={product.specialOffer ? 'primary' : 'text.secondary'}>
+                {product.specialOffer ? 'Special Offer!' : 'Base Price'}
+              </Typography>
+            </Paper>
+          </Grid>
+        )) : (
+          <Typography sx={{ml: 4}}>No products yet.</Typography>
+        )}
+      </Grid>
 
+      <Box mt={4}>
+        <Typography variant="h6">Add Product</Typography>
+        <TextField fullWidth label="Product Name" value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} sx={{ mt: 2 }} />
+        <TextField fullWidth label="Price" type="number" value={newProduct.price} onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })} sx={{ mt: 2 }} />
+        <FormControlLabel
+          control={<Checkbox checked={newProduct.specialOffer} onChange={(e) => setNewProduct({ ...newProduct, specialOffer: e.target.checked })} />}
+          label="Special Offer"
+        />
+        <Button variant="contained" fullWidth sx={{ mt: 2 }} onClick={handleAddProduct}>Add Product</Button>
+      </Box>
 
-    const handleReply = (id) => {
-        postReply({
-            variables: { replyReviewId: id, reply: reply },
-            onCompleted: (e) => {
-                refetch()
-            }
-        })
-    }
-    // Handle product addition
-    const handleAddProduct = () => {
-        // Trigger the mutation to add a product
-        addProduct({
-            variables: {
-                businessId,
-                name: newProduct.name,
-                price: parseFloat(newProduct.price),
-                specialOffer: newProduct.specialOffer,
-            },
-            onCompleted: () => {
-                console.log("Product added successfully!");
-                // Refetch the data to get updated products and reviews
-                refetch();
-            },
-            onError: (error) => {
-                console.error("Error adding product:", error);
-            }
-        });
-    };
-
-    return (
-        <Container maxWidth="md" sx={{ mb: 10 }}>
-            <Button fullWidth variant="outlined" color="primary" onClick={()=>navigate("/")} sx={{mt:4, mb:4}}>Go back to listings</Button>
-            {/* Business Info */}
-            <Box sx={{ mb: 4 }}>
-                <img
-                    src={`http://localhost:4000/uploads/${getBusinessById.image.split("\\").pop()}`}
-                    alt={getBusinessById.name}
-                    style={{
-                        width: '100%',
-                        height: '100px',
-                        objectFit: 'cover',
-                        borderRadius: '8px',
-                    }}
-                />
-                <Typography variant="h4" gutterBottom>{getBusinessById.name}</Typography>
-                <Typography variant="h6" color="text.secondary">{getBusinessById.address}</Typography>
-                <Typography variant="body1" sx={{ mb: 2 }}>{getBusinessById.description}</Typography>
-
-                {/* Average Rating */}
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Rating name="read-only" value={averageRating} readOnly precision={0.5} />
-                    <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                        {totalReviews} {totalReviews === 1 ? 'review' : 'reviews'}
-                    </Typography>
-                </Box>
-            </Box>
-
-            {/* Products Section */}
-            <Typography variant="h6" gutterBottom>Products</Typography>
-            <Grid container spacing={2}>
-                {getBusinessById.products.length > 0 ? (
-                    getBusinessById.products.map((product) => (
-                        <Grid item xs={12} sm={6} md={4} key={product.id}>
-                            <Box sx={{ p: 2, borderRadius: '8px', border: '1px solid #ddd' }}>
-                                <img
-                                    src={!product.iamge ? "" : `http://localhost:4000/uploads/${product.image.split("\\").pop()}`}
-                                    alt={product.name}
-                                    style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
-                                />
-                                <Typography variant="body1" sx={{ mt: 2 }}>{product.name}</Typography>
-                                <Typography variant="body2" color="text.secondary">{product.description}</Typography>
-                                <Typography variant="body1" color="text.primary" sx={{ mt: 1 }}>${product.price}</Typography>
-                                {product.specialOffer ? (
-                                    <Typography variant="body2" color="primary" sx={{ mt: 1 }}>Special Offer!</Typography>
-                                ) : <Typography variant="body2" color="primary" sx={{ mt: 1 }}>Base Price</Typography>}
-                            </Box>
-                        </Grid>
-                    ))
-                ) : (
-                    <Typography>No products available.</Typography>
-                )}
-            </Grid>
-            {/* TODO: Image upload left FE & BE */}
-            {/* Add Product Form */}
-            <Box sx={{ mt: 4 }}>
-                <Typography variant="h6" gutterBottom>Add Product</Typography>
-                <TextField
-                    label="Product Name"
-                    value={newProduct.name}
-                    onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                />
-                <TextField
-                    label="Price"
-                    type="number"
-                    value={newProduct.price}
-                    onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                />
-                <FormControlLabel
-                    control={
-                        <Checkbox
-                            checked={newProduct.specialOffer}
-                            onChange={(e) => setNewProduct({ ...newProduct, specialOffer: e.target.checked })}
-                        />
-                    }
-                    label="Special Offer"
-                />
-                <Button fullWidth variant="contained" color="primary" sx={{ mt: 2, mb: 2 }} onClick={handleAddProduct}>Add Product</Button>
-            </Box>
-
-            {/* Reviews Section */}
-            <Typography variant="h6" gutterBottom>Reviews</Typography>
-            {getBusinessById.reviews.length > 0 ? (
-                getBusinessById.reviews.map((review) => {
-                    const replied = review?.ownerReply != null
-                    return ((
-                        <Box key={review.id} sx={{ p: 2, mb: 2, borderRadius: '8px', border: '1px solid #ddd' }}>
-                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{review.user.username}</Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                {new Date(parseInt(review.createdAt)).toLocaleDateString()}
-                            </Typography>
-                            {replied ? <Typography variant="body2">{review.comment}</Typography> :
-                                <Box sx={{display:'flex', gap:10}}>
-
-                                    <TextField
-                                        label="Reply to this comment"
-
-                                        value={reply}
-                                        onChange={(e) => setReply(e.target.value)}
-                                        fullWidth
-                                    />
-                                    <Button variant="contained" onClick={() => { handleReply(review.id) }}>Reply</Button>
-                                </Box>
-                            }
-                            <Rating name="read-only" value={review.rating} readOnly />
-                            <Typography variant="body2">Your Reply: {review.ownerReply}</Typography>
-                        </Box>
-                    ))
-                })
+      <Box mt={5}>
+        <Typography variant="h6">Reviews</Typography>
+        {business.reviews.length ? business.reviews.map((review) => (
+          <Paper key={review.id} sx={{ p: 2, mt: 2 }}>
+            <Typography fontWeight="bold">{review.user.username}</Typography>
+            <Typography variant="caption" color="text.secondary">{new Date(parseInt(review.createdAt)).toLocaleDateString()}</Typography>
+            <Typography sx={{ mt: 1 }}>{review.comment}</Typography>
+            <Rating value={review.rating} readOnly size="small" />
+            {review.ownerReply ? (
+              <Typography sx={{ mt: 1 }}>Your Reply: {review.ownerReply}</Typography>
             ) : (
-                <Typography>No reviews yet.</Typography>
+              <Box mt={2}>
+                <TextField
+                  fullWidth
+                  label="Reply to this comment"
+                  value={replies[review.id] || ''}
+                  onChange={(e) => setReplies({ ...replies, [review.id]: e.target.value })}
+                />
+                <Button sx={{ mt: 1 }} variant="contained" onClick={() => handleReply(review.id)}>Reply</Button>
+              </Box>
             )}
-        </Container>
-    );
+          </Paper>
+        )) : <Typography mt={2}>No reviews yet.</Typography>}
+      </Box>
+    </Container>
+  );
 };
 
 export default BusinessPage;

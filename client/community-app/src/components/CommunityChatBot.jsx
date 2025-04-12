@@ -18,7 +18,7 @@ import SendIcon from "@mui/icons-material/Send";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import CloseIcon from "@mui/icons-material/Close";
 import ReactMarkdown from "react-markdown";
-import { gql, useQuery } from "@apollo/client";
+import { gql, useQuery, useMutation } from "@apollo/client";
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { useNavigate } from "react-router-dom";
 const GET_CHATBOT_RESPONSE = gql`
@@ -143,7 +143,7 @@ const CommunityChatbot = ({ userId }) => {
                             right: 20,
                             width: "600px",
                             height: "700px",
-                            bgcolor: "white",
+                            bgcolor: (theme) => theme.palette.background.default,
                             borderRadius: "10px",
                             boxShadow: 24,
                             p: 2,

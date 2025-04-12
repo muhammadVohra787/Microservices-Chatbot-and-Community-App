@@ -23,6 +23,11 @@ const ReviewSchema = new mongoose.Schema({
         type: String,
         required: false,
         default: null
+    },
+    sentiment: {
+        type: String,
+        required: false,
+        default: null
     }
 }, {
     timestamps: true,

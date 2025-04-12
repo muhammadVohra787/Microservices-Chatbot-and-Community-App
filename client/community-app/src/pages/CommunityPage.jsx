@@ -1,15 +1,26 @@
-import React, { useEffect, useState } from 'react';
-// import { CircularProgress, Container, List, ListItem, ListItemText, Box, Drawer, Toolbar, Typography, Button } from '@mui/material';
-import { CircularProgress, Container, List, ListItemButton, ListItemText, Box, Drawer, Toolbar, Typography, Button } from '@mui/material';
+import React, { useState } from 'react';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Tabs,
+  Tab,
+  Container,
+  Box,
+  Paper,
+  Button
+} from '@mui/material';
+import { gql, useMutation } from '@apollo/client';
+
 import CreateCommunityPost from '../components/CreateCommunityPost.jsx';
 import CreateHelpRequest from '../components/CreateHelpRequest.jsx';
 import HelpRequestList from '../components/HelpRequestList.jsx';
 import ListCommunityPosts from '../components/ListCommunityPosts.jsx';
 import NewsFeed from '../components/NewsFeed.jsx';
-import { useQuery, useMutation, gql } from '@apollo/client';
 import CreateBusinessProfile from '../components/CreateBusinessProfile.jsx';
 import BusinessDashboard from '../components/BusinessDashboard.jsx';
 import BusinessView from '../components/BusinessView.jsx';
+
 const LOGOUT_MUTATION = gql`
   mutation Logout {
     logout
@@ -17,104 +28,81 @@ const LOGOUT_MUTATION = gql`
 `;
 
 const CommunityPage = ({ role, userId }) => {
-  console.log("Community page: ", { role, userId })
   if (!role || !userId) {
-    return <h1>Role or user Id not found, check login</h1>
+    return <Typography variant="h6" sx={{ mt: 4, textAlign: 'center' }}>Role or user ID not found. Please log in.</Typography>;
   }
 
   const [logout] = useMutation(LOGOUT_MUTATION, {
-    onCompleted: () => {
-      window.location.reload();
-    },
+    onCompleted: () => window.location.reload()
   });
 
-  // Define available sections based on roles
   const sectionsByRole = {
     resident: [
-      { name: 'Businesses', component: <BusinessView userId={userId}/> },
+      { name: 'Businesses', component: <BusinessView userId={userId} /> },
       { name: 'Create Post', component: <CreateCommunityPost userId={userId} /> },
       { name: 'Create Help Request', component: <CreateHelpRequest userId={userId} /> },
       { name: 'Help Requests', component: <HelpRequestList userId={userId} role={role} /> },
-      { name: 'Community Posts', component: <ListCommunityPosts userId={userId} /> },
- 
+      { name: 'News Feed', component: <NewsFeed userId={userId} /> },
+      { name: 'Community Posts', component: <ListCommunityPosts userId={userId} /> }
     ],
     business_owner: [
-      { name: 'Businesses', component: <BusinessView userId={userId}/> },
-      {name :'Create Business', component: <CreateBusinessProfile userId={userId}/>}, // this page is not for BUSINESS OWNERS but here for testing
-      {name :'Dashboard', component: <BusinessDashboard userId={userId}/>},
+      { name: 'Create Business', component: <CreateBusinessProfile userId={userId} /> },
+      { name: 'Dashboard', component: <BusinessDashboard userId={userId} /> },
       { name: 'Create Post', component: <CreateCommunityPost userId={userId} /> },
       { name: 'News Feed', component: <NewsFeed userId={userId} /> },
       { name: 'Help Requests', component: <HelpRequestList userId={userId} role={role} /> },
       { name: 'Community Posts', component: <ListCommunityPosts userId={userId} /> }
-      
     ],
     community_organizer: [
-      { name: 'Businesses', component: <BusinessView userId={userId}/> },
+      { name: 'Businesses', component: <BusinessView userId={userId} /> },
       { name: 'Create Post', component: <CreateCommunityPost userId={userId} /> },
       { name: 'Create Help Request', component: <CreateHelpRequest userId={userId} /> },
       { name: 'Help Requests', component: <HelpRequestList userId={userId} role={role} /> },
       { name: 'News Feed', component: <NewsFeed userId={userId} /> },
-      { name: 'Community Posts', component: <ListCommunityPosts userId={userId} /> },
-    ],
-  };
-
-  const handleLogout = () => {
-    logout();
+      { name: 'Community Posts', component: <ListCommunityPosts userId={userId} /> }
+    ]
   };
 
   const sections = sectionsByRole[role] || [];
-  const [selectedIndex, setSelectedIndex] = useState(0); // Track the selected tab by index
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   return (
-    <>
-      <Box sx={{ display: 'flex' }}>
-        {/* Sidebar Drawer */}
-        <Drawer
-          variant="permanent"
-          sx={{
-            width: "30%",
-            flexShrink: 0,
-            [`& .MuiDrawer-paper`]: { width: "30%", boxSizing: 'border-box' },
-          }}
-        >
-          <Toolbar>
-            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-              Community Panel
-            </Typography>
-          </Toolbar>
-          <List>
-            {sections.map((section, index) => (
-              <ListItemButton
-                key={index}
-                onClick={() => {
-                  setSelectedIndex(index); // Set the selected tab index
-                }}
-                sx={{
-                  backgroundColor: selectedIndex === index ? 'rgba(0, 0, 0, 0.08)' : 'transparent', // Highlight active tab
-                  '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.16)', // Hover effect
-                  },
-                }}
-              >
-                <ListItemText primary={section.name} />
-              </ListItemButton>
-            ))}
-            <ListItemButton key="logout" onClick={handleLogout}>
-              <ListItemText primary="Logout" />
-            </ListItemButton>
-          </List>
-          
-        </Drawer>
-
-        {/* Main Content Area */}
-        <Container sx={{ flexGrow: 1, p: 3 }}>
-          <Typography variant="h4" gutterBottom>
-            Community Page
+    <Box sx={{ flexGrow: 1 }}>
+      {/* Top Navigation Bar */}
+      <AppBar position="static" sx={{ backgroundColor: '#1e1e1e' }}>
+        <Toolbar>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            Community Portal
           </Typography>
-          {sections[selectedIndex]?.component}
-        </Container>
-      </Box>
-    </>
+          <Button color="inherit" onClick={logout}>
+            Logout
+          </Button>
+        </Toolbar>
+        <Tabs
+          value={selectedIndex}
+          onChange={(e, newIndex) => setSelectedIndex(newIndex)}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ px: 2, backgroundColor: '#2e2e2e' }}
+          textColor="inherit"
+          indicatorColor="secondary"
+        >
+          {sections.map((section, index) => (
+            <Tab key={index} label={section.name} />
+          ))}
+        </Tabs>
+      </AppBar>
+
+      {/* Main Content */}
+      <Container sx={{ mt: 4, mb: 8 }}>
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="h4" gutterBottom>
+            {sections[selectedIndex]?.name}
+          </Typography>
+          <Box mt={3}>{sections[selectedIndex]?.component}</Box>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 

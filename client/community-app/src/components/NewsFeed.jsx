@@ -49,9 +49,8 @@
     };
 
     return (
-      <Paper sx={{ padding: 2 }}>
-        <Typography variant="h6" gutterBottom>News Feed</Typography>
-        <Grid container spacing={2}>
+      <div style={{padding: 1, borderRadius: 4}}>
+
           {posts.map((post) => (
             <Grid item xs={100} sm={100} md={100} key={post.id}>
               <Card variant="outlined">
@@ -74,8 +73,7 @@
               </Card>
             </Grid>
           ))}
-        </Grid>
-      </Paper>
+      </div>
     );
   };
 

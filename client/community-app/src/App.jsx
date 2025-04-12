@@ -13,9 +13,13 @@ const client = new ApolloClient({
 });
 
 function App({ role, userId }) {
-  const rolePassed = role
-  const userIdPassed = userId
+  const rolePassed = role || "business_owner"
+  const userIdPassed = userId || "67f9c22d0ddbe30935c811b7"
+//67f9c22d0ddbe30935c811b7
+//business_owner
 
+//67f9c52018b7f377b24e858f
+//resident
   console.log("Community app", { userId, role }, { userIdType: typeof userId, roleType: typeof role });
 
   return (
@@ -24,14 +28,12 @@ function App({ role, userId }) {
       <Router>
       <CommunityChatbot userId={userIdPassed}/>
         <Routes>
-          {/* Home Page */}
           <Route
             path="/"
             element={<CommunityPage role={rolePassed} userId={userIdPassed} />}
           />
           <Route path="/discussion/:id" element={<SingleDiscussion/>}/>
           <Route path="/business/:id" element= {<BusinessPage/>}/>
-          {/* 404 Page Not Found */}
           <Route path="*" element={<h2>Page Not Found</h2>} />
         </Routes>
       </Router>
@@ -39,7 +41,4 @@ function App({ role, userId }) {
   );
 }
 
-// function App(){
-//   return <h1>Hello</h1>
-// }
 export default App;

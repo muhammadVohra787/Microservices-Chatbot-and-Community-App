@@ -62,7 +62,7 @@ const createUser = async () => {
             username: 'communityorg@domain.com',
             email: 'communityorg@domain.com',
             password: 'password123', // In a real app, hash the password
-            role: 'community_organizer'
+            role: 'business_owner'
         });
 
         await newUser.save();

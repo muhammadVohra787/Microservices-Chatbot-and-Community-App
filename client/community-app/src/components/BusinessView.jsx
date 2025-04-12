@@ -25,6 +25,7 @@ query GetAllBusinesses {
       id
       rating
       ownerReply
+      sentiment
     }  
   }
 }
@@ -39,7 +40,7 @@ mutation Mutation($businessId: ID!, $userId: ID!, $rating: Float!, $comment: Str
 const BusinessView = ({ userId }) => {
   const { data, loading, error, refetch } = useQuery(GET_ALL_BUSINESSES);
   const [createReview] = useMutation(CREATE_REVIEW);
-
+  refetch()
   const [expandedBusiness, setExpandedBusiness] = useState(null);
   const [reviewInputs, setReviewInputs] = useState({}); // per-business rating/comments
 
@@ -88,7 +89,7 @@ const BusinessView = ({ userId }) => {
               <CardMedia
                 component="img"
                 height="200"
-                image={`http://localhost:4000/uploads/${business.image.split("\\").pop()}`}
+                image={business?.image !=null > 0 ? `http://localhost:4000/uploads/${business.image.split("\\").pop()}` : "https://via.placeholder.com/150"}
                 alt={business.name}
               />
               <CardContent>
@@ -111,7 +112,7 @@ const BusinessView = ({ userId }) => {
                         <Box border="1px solid #ccc" borderRadius="8px" p={2}>
                           {product.image ? (
                             <img
-                              src={`http://localhost:4000/uploads/${product.image.split("\\").pop()}`}
+                              src={product.image ? `http://localhost:4000/uploads/${product.image.split("\\").pop()}` : "https://placehold.co/600x400?text=No+Image"}
                               alt={product.name}
                               style={{ width: "100%", height: 100, objectFit: "cover", borderRadius: 4 }}
                             />
@@ -141,6 +142,7 @@ const BusinessView = ({ userId }) => {
                         {review.ownerReply && (
                           <Typography sx={{ mt: 1 }} color="primary">Owner Reply: {review.ownerReply}</Typography>
                         )}
+                        <Typography sx={{ mt: 1 }} color="primary">Sentiment: {review.sentiment}</Typography>
                       </Box>
                     ))
                   ) : (

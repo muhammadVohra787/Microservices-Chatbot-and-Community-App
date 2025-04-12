@@ -8,8 +8,7 @@ import { getSummary } from './geminiResolver.js';
 import { aiAgentLogic } from './geminiResolver.js';
 import fs from 'fs'
 import path from 'path';
-import BussinessProfiles from '../models/BussinessProfiles.js';
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
+import getSentiment from './sentimentalAnalysis.js';
 // Helper function to check if the user role is allowed
 const checkUserRole = async (userId, allowedRoles) => {
   try {
@@ -27,69 +26,80 @@ const checkUserRole = async (userId, allowedRoles) => {
     return false; // Return false if there's an error
   }
 };
+const wrapMutation = (fn, name) => async (...args) => {
+  console.log(`Running mutation: ${name}`);
+  try {
+    return await fn(...args);
+  } catch (err) {
+    console.error(`Error in mutation '${name}':`, err);
+    throw new Error(err.message || 'Something went wrong');
+  }
+};
 
 const resolvers = {
   Query: {
-    getCommunityPosts: async () => {
+    getCommunityPosts: wrapMutation(async () => {
       return await CommunityPost.find().populate('author').sort({ createdAt: -1 });
-    },
-    getHelpRequests: async () => {
+    }, 'getCommunityPosts'),
+    getHelpRequests: wrapMutation(async () => {
       return await HelpRequest.find().populate('author volunteers');
-    },
+    }, 'getHelpRequests'),
 
-    getBusinsessByUserId: async (_, { userId }) => {
-      const user = await User.findById(userId);
-      if (!user) {
-        throw new Error("User not found");
+    getBusinsessByUserId: wrapMutation(async (_, { userId }) => {
+      try {
+        const user = await User.findById(userId);
+        if (!user) {
+          throw new Error("User not found");
+        }
+        const businesses = await BusinessProfile.find({ author: userId })
+          .populate('products')
+          .populate({
+            path: 'reviews',
+            populate: {
+              path: 'user',
+              model: 'User',
+              select: 'username email'
+            }
+          });
+        return businesses;
+      } catch (error) {
+        console.error("Error fetching businesses:", error);
+        throw new Error("Failed to fetch businesses");
       }
-      const businesses = await BusinessProfile.find({ author: userId })
-        .populate('products') // Populate the products directly
-        .populate({
-          path: 'reviews',  // Populate reviews and user inside each review
-          populate: {
-            path: 'user',    // Populate the user in the review
-            model: 'User',   // Ensure we populate the correct model (User)
-            select: 'username email' // Select the fields you want from the User model
-          }
-        });
-
-      console.log('Businesses with populated reviews and products:', businesses);
-
-      console.log(businesses[0].reviews[0].user)
-      return businesses;
-    },
-    getBusinessById: async (_, { id }) => {
+    }, 'getBusinsessByUserId'),
+    getBusinessById: wrapMutation(async (_, { id }) => {
       const businesses = await BusinessProfile.findById(id)
-      .populate('products') // Populate the products directly
+      .populate('products') 
       .populate({
-        path: 'reviews',  // Populate reviews and user inside each review
+        path: 'reviews',  
         populate: {
-          path: 'user',    // Populate the user in the review
-          model: 'User',   // Ensure we populate the correct model (User)
-          select: 'username email' // Select the fields you want from the User model
+          path: 'user',    
+          model: 'User',   
+          select: 'username email' 
         }
       });
       return businesses
-    },
+    }, 'getBusinessById'),
 
-    getAllBusinesses: async () => {
+    getAllBusinesses: wrapMutation(async () => {
 
       const businesses = await BusinessProfile.find()
-      .populate('products') // Populate the products directly
+      .populate('products') 
       .populate({
-        path: 'reviews',  // Populate reviews and user inside each review
+        path: 'reviews',  
         populate: {
-          path: 'user',    // Populate the user in the review
-          model: 'User',   // Ensure we populate the correct model (User)
-          select: 'username email' // Select the fields you want from the User model
+          path: 'user', 
+          model: 'User',  
+          select: 'username email' 
         }
       });
       return await BusinessProfile.find().populate('products reviews')
-    },
-    getDiscussionById: async (_, { postId }) => {
+    }, 'getAllBusinesses'),
+    getDiscussionById: wrapMutation(async (_, { postId }) => {
       return await CommunityPost.findById(postId).populate('author')
-    },
-    async communityAIQuery(_, { input, userId }) {
+    }, 'getDiscussionById'),
+
+    communityAIQuery: wrapMutation(async (_, { input, userId }) => {
       try {
         const response = await aiAgentLogic(input, userId);
         return {
@@ -109,20 +119,20 @@ const resolvers = {
         console.error("Error in AI Query:", error);
         throw new Error("Failed to process AI query.");
       }
-    },
+    }, 'communityAIQuery'),
   },
 
   Mutation: {
-    createCommunityPost: async (_, { author, title, content, category }) => {
-      const hasPermission = await checkUserRole(author, ['resident', 'community_organizer']);
+    createCommunityPost: wrapMutation(async (_, { author, title, content, category }) => {
+      const hasPermission = await checkUserRole(author, ['resident', 'business_owner', 'community_organizer']);
       if (!hasPermission) throw new Error('Insufficient permissions');
       console.log(content.length)
       let aiSummary = await getSummary(content);
       const newPost = new CommunityPost({ author, title, content, category, aiSummary });
       return await newPost.save();
-    },
+    }, 'createCommunityPost'),
 
-    createHelpRequest: async (_, { author, description, location }) => {
+    createHelpRequest: wrapMutation(async (_, { author, description, location }) => {
       const hasPermission = await checkUserRole(author, ['resident', 'business_owner', 'community_organizer']);
       if (!hasPermission) throw new Error('Insufficient permissions');
 
@@ -135,22 +145,20 @@ const resolvers = {
       });
       await newRequest.save();
       return true;
-    },
+    }, 'createHelpRequest'),
 
-    markHelpRequestResolved: async (_, { id }) => {
+    markHelpRequestResolved: wrapMutation(async (_, { id }) => {
       console.log(id)
       const helpRequest = await HelpRequest.findById(id);
       console.log(helpRequest?.isResolved)
       if (!helpRequest) throw new Error('Help request not found!');
 
-      const hasPermission = await checkUserRole(helpRequest.author, ['community_organizer']);
-      if (!hasPermission) throw new Error('Insufficient permissions');
       helpRequest.isResolved = !helpRequest.isResolved
       helpRequest.save()
       return true;
-    },
+    }, 'markHelpRequestResolved'),
 
-    addVolunteerToHelpRequest: async (_, { id, volunteerId }) => {
+    addVolunteerToHelpRequest: wrapMutation(async (_, { id, volunteerId }) => {
       // Find the help request by its ID
       const helpRequest = await HelpRequest.findById(id);
       if (!helpRequest) throw new Error('Help request not found!');
@@ -161,7 +169,7 @@ const resolvers = {
 
       console.log("Role and Id ", volunteer.role, "id", volunteerId); // Log the volunteer's role for debugging
 
-      const hasPermission = volunteer.role === 'community_organizer';
+      const hasPermission = await checkUserRole(author, ['resident', 'business_owner', 'community_organizer']);
       if (!hasPermission) throw new Error('Insufficient permissions');
 
       // Add the volunteer to the help request
@@ -173,15 +181,15 @@ const resolvers = {
 
       console.log("Volunteer added")
       return true;  // Return success
-    },
+    }, 'addVolunteerToHelpRequest'),
 
 
     // New Mutation: Update Community Post
-    updateCommunityPost: async (_, { id, title, content, category, aiSummary }) => {
+    updateCommunityPost: wrapMutation(async (_, { id, title, content, category, aiSummary }) => {
       const post = await CommunityPost.findById(id);
       if (!post) throw new Error('Community post not found!');
       console.log(aiSummary)
-      const hasPermission = await checkUserRole(post.author, ['resident', 'community_organizer']);
+      const hasPermission = await checkUserRole(post.author, ['resident', 'business_owner', 'community_organizer']);
       if (!hasPermission) throw new Error('Insufficient permissions');
 
       post.title = title || post.title;
@@ -190,22 +198,22 @@ const resolvers = {
       post.aiSummary = aiSummary || post.aiSummary
       const newPost = await post.save();
       return await newPost.populate('author')
-    },
+    }, 'updateCommunityPost'),
 
     // New Mutation: Delete Community Post
-    deleteCommunityPost: async (_, { id }) => {
+    deleteCommunityPost: wrapMutation(async (_, { id }) => {
       const post = await CommunityPost.findById(id);
       if (!post) throw new Error('Community post not found!');
 
-      const hasPermission = await checkUserRole(post.author, ['resident', 'community_organizer']);
+      const hasPermission = await checkUserRole(post.author, ['resident', 'business_owner', 'community_organizer']);
       if (!hasPermission) throw new Error('Insufficient permissions');
 
       await post.deleteOne();
       return true;
-    },
+    }, 'deleteCommunityPost'),
 
     // New Mutation: Update Help Request
-    updateHelpRequest: async (_, { id, description, location, isResolved }) => {
+    updateHelpRequest: wrapMutation(async (_, { id, description, location, isResolved }) => {
       console.log({ id, description, location, isResolved });
       const helpRequest = await HelpRequest.findById(id);
       if (!helpRequest) throw new Error('Help request not found!');
@@ -234,11 +242,10 @@ const resolvers = {
 
       // Return the updated help request with populated author
       return updatedHelpRequest;
-    }
-    ,
+    }, 'updateHelpRequest'),
 
     // New Mutation: Delete Help Request
-    deleteHelpRequest: async (_, { id }) => {
+    deleteHelpRequest: wrapMutation(async (_, { id }) => {
       const helpRequest = await HelpRequest.findById(id);
       if (!helpRequest) throw new Error('Help request not found!');
 
@@ -247,13 +254,14 @@ const resolvers = {
 
       await helpRequest.deleteOne();
       return true;
-    },
+    }, 'deleteHelpRequest'),
+
     //simple logout
-    logout: (_, __, { res }) => {
+    logout: wrapMutation((_, __, { res }) => {
       res.clearCookie("token", { httpOnly: true, secure: true, sameSite: "Strict" });
       return true;
-    },
-    replyReview: async (_, { id, reply }) => {
+    }, 'logout'),
+    replyReview: wrapMutation(async (_, { id, reply }) => {
       // Find the review by its ID and update the `ownerReply` field
       let review = await Review.findByIdAndUpdate(
         id,
@@ -266,8 +274,8 @@ const resolvers = {
       }
     
       return true;
-    },
-    createReview: async (_, { businessId, userId, rating, comment }, { user }) => {
+    }, 'replyReview'),
+    createReview: wrapMutation(async (_, { businessId, userId, rating, comment }, { user }) => {
       try {
         // Create a new review
         const review = new Review({
@@ -276,7 +284,8 @@ const resolvers = {
           rating,
           comment
         });
-
+        const sentiment = await getSentiment(comment);
+        review.sentiment = sentiment;
         // Save the review to the database
         await review.save();
 
@@ -290,9 +299,9 @@ const resolvers = {
         console.error("Error creating review:", error);
         throw new Error("Error creating review");
       }
-    },
+    }, 'createReview'),
 
-    createProduct: async (_, { businessId, name, price, description, image, specialOffer }) => {
+    createProduct: wrapMutation(async (_, { businessId, name, price, description, image, specialOffer }) => {
       try {
         // Create a new product
         const product = new Product({
@@ -317,8 +326,8 @@ const resolvers = {
         console.error("Error creating product:", error);
         throw new Error("Error creating product");
       }
-    },
-    createBusinessProfile: async (_, { userId, name, description, address, image }) => {
+    }, 'createProduct'),
+    createBusinessProfile: wrapMutation(async (_, { userId, name, description, address, image }) => {
       try {
         // Check user role permissions
         const hasPermission = await checkUserRole(userId, ['business_owner']);
@@ -333,22 +342,21 @@ const resolvers = {
 
           const folder_path = path.join(process.cwd(), './uploads')
           await fs.promises.mkdir(folder_path, { recursive: true });
-          // Define the file path to save the image (e.g., 'uploads/images/')
+
           imagePath = path.join(folder_path, `${Date.now()}.jpg`);
 
-          // Save the image file to the disk
+
           await fs.promises.writeFile(imagePath, buffer);
         }
-        // Save the business profile with the image path
+    
         const businessProfile = new BusinessProfile({
           author: userId,
           name,
           description,
           address,
-          image: imagePath, // Store the file path of the saved image
+          image: imagePath, 
         });
 
-        // Save the profile to the database
         await businessProfile.save();
 
         return true;  // Return success
@@ -356,7 +364,7 @@ const resolvers = {
         console.error('Error creating business profile:', error);
         throw new Error('Error creating business profile');
       }
-    },
+    }, 'createBusinessProfile'),      
   }
 };
 
