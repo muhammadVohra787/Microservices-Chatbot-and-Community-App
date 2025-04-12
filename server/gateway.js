@@ -44,13 +44,19 @@ async function startServer() {
   try {
     // Configure wait-on to wait for the required services
     const resources = [
-      'http://127.0.0.1:4001', // Auth service
-      'http://127.0.0.1:4002', // Community service
+      'tcp:4001', // Auth service TCP port
+      'tcp:4002', // Community service TCP port
     ];
     console.log("waiting on services")
+    //TODO: make this wait on work
     // Wait for the services to be ready
-    // const res =await waitOn({ resources , timeout: 30000}); // not working idk why
-    // console.log(res)
+    const res = await waitOn({ 
+      resources, 
+      timeout: 30000,
+      verbose: true, // Add verbose logging
+      delay: 1000, // Add a small delay between checks
+    });
+    console.log(res)
 
     console.log('✅ Microservices are fully running!');
 

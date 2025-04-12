@@ -8,7 +8,7 @@
   "start:auth": "node ./microservices/auth-service/auth-microservice.js",
   "start:gateway": "node ./gateway.js",
   "install-deps": "npm i && cd ./microservices/auth-service && npm i && cd ../community-service && npm i",
-  "start:all": "npm-run-all --parallel start:auth start:gateway"
+  "start:all": "npm-run-all --parallel start:auth start:gateway start:community"
 }
 ,
   "type": "module",

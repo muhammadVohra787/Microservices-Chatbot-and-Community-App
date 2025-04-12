@@ -230,7 +230,7 @@ const CommunityChatbot = ({ userId }) => {
                             <CircularProgress />
                         </Box>}
                         <Divider />
-                        <Box sx={{ display: "flex", p: 1, bgcolor: "#fff" }}>
+                        <Box sx={{ display: "flex", p: 1, bgcolor: (theme) => theme.palette.background.paper }}>
                             <TextField fullWidth variant="outlined" placeholder="Type a message..." value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSendMessage() && !loading} />
                             <IconButton color="primary" onClick={handleSendMessage}>
                                 <SendIcon />
