@@ -72,7 +72,7 @@ const HelpRequestList = ({ userId, role }) => {
       console.log(data)
     }
   });
-
+  refetch()
   const [requests, setRequests] = useState([]);
   const [editing, setEditing] = useState(null);
 

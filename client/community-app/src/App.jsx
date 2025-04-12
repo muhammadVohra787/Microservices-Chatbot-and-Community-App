@@ -13,8 +13,8 @@ const client = new ApolloClient({
 });
 
 function App({ role, userId }) {
-  const rolePassed = role || "business_owner"
-  const userIdPassed = userId || "67f9c22d0ddbe30935c811b7"
+  const rolePassed = role || "resident"
+  const userIdPassed = userId || "67fa78b6995b4923c7b4653d"
 //67f9c22d0ddbe30935c811b7
 //business_owner
 

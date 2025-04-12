@@ -79,7 +79,7 @@ const BusinessView = ({ userId }) => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ my: 4 }}>
+    <Container >
       <Typography variant="h4" gutterBottom>All Businesses</Typography>
 
       <Grid container spacing={3}>
@@ -89,7 +89,7 @@ const BusinessView = ({ userId }) => {
               <CardMedia
                 component="img"
                 height="200"
-                image={business?.image !=null > 0 ? `http://localhost:4000/uploads/${business.image.split("\\").pop()}` : "https://via.placeholder.com/150"}
+                image={business?.image?.length > 0 ? `http://localhost:4000/uploads/${business.image.split("\\").pop()}` : "https://placehold.co/600x400?text=No+Image"}
                 alt={business.name}
               />
               <CardContent>

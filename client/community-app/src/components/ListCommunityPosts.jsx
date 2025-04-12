@@ -134,7 +134,7 @@ const ListCommunityPosts = ({ userId }) => {
                   Type: {post.category}
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 2 }}>{post.content}</Typography>
-                <Box sx={{ backgroundColor: '#f4f6f8', p: 2, borderRadius: 1 }}>
+                <Box sx={{ backgroundColor: '#363434', p: 2, borderRadius: 1 }}>
                   <Typography variant="body2" color="primary" gutterBottom>AI Summary</Typography>
                   <Typography variant="body2">
                     {post.aiSummary || "No AI summary available!"}

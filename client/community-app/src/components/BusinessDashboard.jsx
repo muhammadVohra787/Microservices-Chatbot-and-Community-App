@@ -75,7 +75,7 @@ const BusinessDashboard = ({ userId }) => {
                     component="img"
                     height="160"
                     image={
-                      business.image
+                      business?.image?.length > 0
                         ? `http://localhost:4000/uploads/${business.image.split("\\").pop()}`
                         : "https://placehold.co/600x400?text=No+Image"
                     }

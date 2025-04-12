@@ -2,35 +2,28 @@ import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
   palette: {
-    mode: 'dark',  // Changed from 'light' to 'dark'
+    mode: 'dark',
+    background: {
+      default: '#000000',
+      paper: '#121212',
+    },
     primary: {
-      main: '#90caf9',
+      main: '#ffffff', // white for contrast
     },
     secondary: {
-      main: '#f48fb1',
+      main: '#888888',
     },
-    background: {
-      default: '#121212',
-      paper: '#1e1e1e',
+    text: {
+      primary: '#ffffff',
+      secondary: '#cccccc',
     },
-  },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontWeight: 500,
-    },
-    button: {
-      textTransform: 'none',
-    },
-  },
-  shape: {
-    borderRadius: 8,
   },
   components: {
-    MuiButton: {
+    MuiCssBaseline: {
       styleOverrides: {
-        root: {
-          borderRadius: 8,
+        body: {
+          backgroundColor: '#000000',
+          color: '#ffffff',
         },
       },
     },
